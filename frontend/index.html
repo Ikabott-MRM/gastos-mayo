@@ -148,15 +148,219 @@
         margin-bottom: 20px;
         border: 1px solid #f5c6cb;
       }
+
+      /* ── Edit button ── */
+      .btn-edit {
+        padding: 5px 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-edit:hover {
+        background: #5568d3;
+      }
+      .btn-edit:focus {
+        outline: 3px solid #764ba2;
+        outline-offset: 2px;
+      }
+
+      /* ── Modal overlay ── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+      .modal-box {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 480px;
+        padding: 28px 32px;
+        position: relative;
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+      .modal-header h2 {
+        font-size: 1.3rem;
+        color: #333;
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.4rem;
+        color: #666;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background 0.15s;
+      }
+      .modal-close:hover {
+        background: #f0f0f0;
+        color: #333;
+      }
+      .modal-close:focus {
+        outline: 3px solid #667eea;
+        outline-offset: 2px;
+      }
+
+      /* ── Form fields ── */
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 6px;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        color: #333;
+        transition: border-color 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      }
+      .form-group input:disabled,
+      .form-group select:disabled {
+        background: #f5f5f5;
+        color: #888;
+        cursor: not-allowed;
+      }
+      .field-error {
+        border-color: #dc3545 !important;
+      }
+      .field-error-msg {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.82rem;
+        color: #dc3545;
+        font-weight: 500;
+      }
+
+      /* ── Modal banners ── */
+      .modal-banner-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+        padding: 12px 15px;
+        margin-bottom: 18px;
+        font-size: 0.9rem;
+      }
+      .modal-banner-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        border-radius: 6px;
+        padding: 16px 15px;
+        margin-bottom: 18px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      /* ── Modal footer buttons ── */
+      .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+      }
+      .btn-cancel {
+        padding: 9px 20px;
+        background: white;
+        color: #555;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-cancel:hover {
+        background: #f5f5f5;
+      }
+      .btn-cancel:focus {
+        outline: 3px solid #667eea;
+        outline-offset: 2px;
+      }
+      .btn-save {
+        padding: 9px 22px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        min-width: 90px;
+      }
+      .btn-save:hover:not(:disabled) {
+        background: #5568d3;
+      }
+      .btn-save:disabled {
+        background: #aab4f0;
+        cursor: not-allowed;
+      }
+      .btn-save:focus {
+        outline: 3px solid #764ba2;
+        outline-offset: 2px;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useEffect } = React;
+      const { useState, useEffect, useRef } = React;
 
       const API_BASE = "http://localhost:3001/api";
+
+      const ALLOWED_CATEGORIES = [
+        "Travel",
+        "Meals",
+        "Accommodation",
+        "Office Supplies",
+        "Software",
+        "Training",
+      ];
+
+      // Returns true if the expense date is more than 90 days before today
+      function isOlderThan90Days(dateStr) {
+        const expenseDate = new Date(dateStr + "T00:00:00Z");
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const diffDays =
+          (today.getTime() - expenseDate.getTime()) / (1000 * 60 * 60 * 24);
+        return diffDays > 90;
+      }
 
       function App() {
         const [expenses, setExpenses] = useState([]);
@@ -169,6 +373,21 @@
         const [category, setCategory] = useState("");
         const [dateFrom, setDateFrom] = useState("");
         const [dateTo, setDateTo] = useState("");
+
+        // ── Edit modal state ──
+        const [editingExpense, setEditingExpense] = useState(null); // null = closed
+        const [editForm, setEditForm] = useState({
+          date: "",
+          category: "",
+          amount: "",
+          description: "",
+        });
+        const [editErrors, setEditErrors] = useState({});
+        const [editSaving, setEditSaving] = useState(false);
+        const [editApiError, setEditApiError] = useState("");
+        const [editSuccess, setEditSuccess] = useState(false);
+        const [editLocked, setEditLocked] = useState(false);
+        const modalCloseRef = useRef(null);
 
         const fetchExpenses = async () => {
           setLoading(true);
@@ -183,7 +402,7 @@
             if (!response.ok) throw new Error("Failed to fetch expenses");
 
             const data = await response.json();
-            setExpenses(data.expenses);
+            setExpenses(data.data);
             setTotal(data.total);
             setCount(data.count);
           } catch (err) {
@@ -206,6 +425,129 @@
           setDateFrom("");
           setDateTo("");
           setTimeout(() => fetchExpenses(), 0);
+        };
+
+        // ── Edit modal functions ──
+
+        const openEditModal = (expense) => {
+          setEditingExpense(expense);
+          setEditForm({
+            date: expense.date,
+            category: expense.category,
+            amount: String(expense.amount),
+            description: expense.description || "",
+          });
+          setEditErrors({});
+          setEditApiError("");
+          setEditSuccess(false);
+          setEditSaving(false);
+          setEditLocked(isOlderThan90Days(expense.date));
+          // Focus the close button after modal opens
+          setTimeout(() => {
+            if (modalCloseRef.current) modalCloseRef.current.focus();
+          }, 50);
+        };
+
+        const closeEditModal = () => {
+          setEditingExpense(null);
+          setEditForm({ date: "", category: "", amount: "", description: "" });
+          setEditErrors({});
+          setEditApiError("");
+          setEditSuccess(false);
+          setEditSaving(false);
+          setEditLocked(false);
+        };
+
+        const validateEditForm = () => {
+          const errors = {};
+          if (!editForm.date) {
+            errors.date = "Date is required";
+          } else if (
+            !/^\d{4}-\d{2}-\d{2}$/.test(editForm.date) ||
+            isNaN(Date.parse(editForm.date))
+          ) {
+            errors.date = "Date must be in YYYY-MM-DD format";
+          }
+          if (!editForm.category) {
+            errors.category = "Field category is required";
+          } else if (!ALLOWED_CATEGORIES.includes(editForm.category)) {
+            errors.category = "Invalid category";
+          }
+          const parsedAmount = parseFloat(editForm.amount);
+          if (editForm.amount === "" || editForm.amount === null) {
+            errors.amount = "Amount must be a positive number";
+          } else if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            errors.amount = "Amount must be a positive number";
+          }
+          return errors;
+        };
+
+        const handleEditFieldChange = (field, value) => {
+          setEditForm((prev) => ({ ...prev, [field]: value }));
+          // Clear the error for this field as soon as the user changes it
+          setEditErrors((prev) => {
+            const next = { ...prev };
+            delete next[field];
+            return next;
+          });
+        };
+
+        const handleEditSave = async () => {
+          const errors = validateEditForm();
+          if (Object.keys(errors).length > 0) {
+            setEditErrors(errors);
+            return;
+          }
+          setEditSaving(true);
+          setEditApiError("");
+          try {
+            const response = await fetch(
+              `${API_BASE}/expenses/${editingExpense.id}`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  date: editForm.date,
+                  category: editForm.category,
+                  amount: parseFloat(editForm.amount),
+                  description: editForm.description,
+                }),
+              },
+            );
+            const data = await response.json();
+            if (!response.ok) {
+              setEditApiError(
+                data.error || "Failed to save. Please try again.",
+              );
+              setEditSaving(false);
+              return;
+            }
+            // Update the expense in the local list and recalculate totals
+            const updatedExpense = data.data[0];
+            setExpenses((prev) =>
+              prev.map((e) =>
+                e.id === updatedExpense.id ? updatedExpense : e,
+              ),
+            );
+            setTotal((prev) => {
+              const oldAmount = editingExpense.amount;
+              return parseFloat(
+                (prev - oldAmount + updatedExpense.amount).toFixed(2),
+              );
+            });
+            setEditSuccess(true);
+            setEditSaving(false);
+            // Close modal after 2-second confirmation period (per spec § Edit Form States)
+            setTimeout(closeEditModal, 2000);
+          } catch (err) {
+            setEditApiError("Failed to save. Please try again.");
+            setEditSaving(false);
+          }
+        };
+
+        // Close modal on Escape key
+        const handleModalKeyDown = (e) => {
+          if (e.key === "Escape") closeEditModal();
         };
 
         return (
@@ -275,13 +617,14 @@
                         <th>Category</th>
                         <th>Description</th>
                         <th>Amount</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {expenses.length === 0 ? (
                         <tr>
                           <td
-                            colSpan="4"
+                            colSpan="5"
                             style={{
                               textAlign: "center",
                               padding: "30px",
@@ -304,6 +647,15 @@
                             <td className="amount">
                               ${expense.amount.toFixed(2)} {expense.currency}
                             </td>
+                            <td>
+                              <button
+                                className="btn-edit"
+                                onClick={() => openEditModal(expense)}
+                                aria-label={`Edit expense: ${expense.description || expense.category} on ${expense.date}`}
+                              >
+                                Edit
+                              </button>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -314,6 +666,187 @@
             )}
 
             {loading && <div className="loading">Loading expenses...</div>}
+
+            {/* ── Edit Modal ── */}
+            {editingExpense && (
+              <div
+                className="modal-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-title"
+                onKeyDown={handleModalKeyDown}
+              >
+                <div className="modal-box">
+                  <div className="modal-header">
+                    <h2 id="modal-title">Edit Expense</h2>
+                    <button
+                      className="modal-close"
+                      onClick={closeEditModal}
+                      aria-label="Close edit modal"
+                      ref={modalCloseRef}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Success state */}
+                  {editSuccess && (
+                    <div className="modal-banner-success" role="status">
+                      ✅ Expense updated successfully
+                    </div>
+                  )}
+
+                  {/* Locked state banner */}
+                  {editLocked && !editSuccess && (
+                    <div className="modal-banner-error" role="alert">
+                      Cannot edit expenses older than 90 days
+                    </div>
+                  )}
+
+                  {/* API error banner */}
+                  {editApiError && !editSuccess && (
+                    <div className="modal-banner-error" role="alert">
+                      ⚠️ {editApiError}
+                    </div>
+                  )}
+
+                  {/* Date field */}
+                  <div className="form-group">
+                    <label htmlFor="edit-date">Date</label>
+                    <input
+                      id="edit-date"
+                      type="text"
+                      value={editForm.date}
+                      onChange={(e) =>
+                        handleEditFieldChange("date", e.target.value)
+                      }
+                      disabled={editLocked || editSaving || editSuccess}
+                      placeholder="YYYY-MM-DD"
+                      className={editErrors.date ? "field-error" : ""}
+                      aria-describedby={
+                        editErrors.date ? "edit-date-error" : undefined
+                      }
+                      aria-invalid={!!editErrors.date}
+                    />
+                    {editErrors.date && (
+                      <span
+                        id="edit-date-error"
+                        className="field-error-msg"
+                        role="alert"
+                      >
+                        {editErrors.date}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Category field */}
+                  <div className="form-group">
+                    <label htmlFor="edit-category">Category</label>
+                    <select
+                      id="edit-category"
+                      value={editForm.category}
+                      onChange={(e) =>
+                        handleEditFieldChange("category", e.target.value)
+                      }
+                      disabled={editLocked || editSaving || editSuccess}
+                      className={editErrors.category ? "field-error" : ""}
+                      aria-describedby={
+                        editErrors.category ? "edit-category-error" : undefined
+                      }
+                      aria-invalid={!!editErrors.category}
+                    >
+                      <option value="">Select a category</option>
+                      {ALLOWED_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                    {editErrors.category && (
+                      <span
+                        id="edit-category-error"
+                        className="field-error-msg"
+                        role="alert"
+                      >
+                        {editErrors.category}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Amount field */}
+                  <div className="form-group">
+                    <label htmlFor="edit-amount">Amount (USD)</label>
+                    <input
+                      id="edit-amount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={editForm.amount}
+                      onChange={(e) =>
+                        handleEditFieldChange("amount", e.target.value)
+                      }
+                      disabled={editLocked || editSaving || editSuccess}
+                      className={editErrors.amount ? "field-error" : ""}
+                      aria-describedby={
+                        editErrors.amount ? "edit-amount-error" : undefined
+                      }
+                      aria-invalid={!!editErrors.amount}
+                    />
+                    {editErrors.amount && (
+                      <span
+                        id="edit-amount-error"
+                        className="field-error-msg"
+                        role="alert"
+                      >
+                        {editErrors.amount}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Description field (optional) */}
+                  <div className="form-group">
+                    <label htmlFor="edit-description">
+                      Description{" "}
+                      <span style={{ fontWeight: 400, color: "#888" }}>
+                        (optional)
+                      </span>
+                    </label>
+                    <input
+                      id="edit-description"
+                      type="text"
+                      value={editForm.description}
+                      onChange={(e) =>
+                        handleEditFieldChange("description", e.target.value)
+                      }
+                      disabled={editLocked || editSaving || editSuccess}
+                    />
+                  </div>
+
+                  {/* Footer buttons */}
+                  <div className="modal-footer">
+                    <button
+                      className="btn-cancel"
+                      onClick={closeEditModal}
+                      disabled={editSaving}
+                    >
+                      {editLocked ? "Close" : "Cancel"}
+                    </button>
+                    {!editLocked && !editSuccess && (
+                      <button
+                        className="btn-save"
+                        onClick={handleEditSave}
+                        disabled={
+                          editSaving || Object.keys(editErrors).length > 0
+                        }
+                        aria-busy={editSaving}
+                      >
+                        {editSaving ? "Saving…" : "Save"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       }

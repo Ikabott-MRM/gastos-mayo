@@ -2,6 +2,7 @@
 
 **Spec:** `.kiro/specs/001-editar-gasto/spec.md`
 **Created:** 2026-05-12
+**Last Updated:** 2026-05-12 (updated: atomic write C3, envelope key A1, colSpan C2, accessibility A6, modal states detail, 2s success timeout)
 **Stack:** Node.js/Express backend · Single-file React frontend (CDN, no build step)
 
 ---
@@ -31,7 +32,7 @@ const ALLOWED_CATEGORIES = [
 
 ### 2.2 Helper: `writeExpenses(records)`
 
-New helper that serialises the in-memory array back to CSV and writes it atomically:
+New helper that serialises the in-memory array back to CSV and writes it **atomically** (write to `.tmp` file, then `rename` to final path — prevents partial writes on failure, per spec edge case "CSV write failure"):
 
 ```js
 async function writeExpenses(records) {
@@ -41,7 +42,9 @@ async function writeExpenses(records) {
       `${r.id},${r.date},${r.category},${r.description},${parseFloat(r.amount.toFixed(2))},${r.currency}`,
   );
   const csv = [header, ...rows].join("\n") + "\n";
-  await fs.promises.writeFile(CSV_PATH, csv, "utf8");
+  const tmpPath = CSV_PATH + ".tmp";
+  await fs.promises.writeFile(tmpPath, csv, "utf8");
+  await fs.promises.rename(tmpPath, CSV_PATH);
 }
 ```
 
@@ -65,7 +68,7 @@ Response on success (HTTP 200) — single-record envelope:
   "count": 1,
   "total": <amount>,
   "currency": "USD",
-  "expenses": [{ updated record }]
+  "data": [{ updated record }]
 }
 ```
 
@@ -76,6 +79,15 @@ Response on success (HTTP 200) — single-record envelope:
 ### 3.1 Styles
 
 Add modal overlay, modal box, form field, error/success message, and button styles inside the existing `<style>` block.
+
+**Accessibility requirements (NFR):**
+
+- Each field must have a visible `<label>` with matching `htmlFor`/`id`
+- Error messages must use `aria-describedby` linking the message to its field
+- Error indicators must include a text message — never color alone
+- All interactive elements (buttons, inputs, close ×) must be reachable via Tab and activatable via Enter/Space
+- Modal close via Escape key must be supported
+- Color contrast must meet WCAG AA minimum (4.5:1 for normal text)
 
 ### 3.2 State additions to `App`
 
@@ -104,7 +116,15 @@ Add an "Edit" column header and an `<button>` in each row that calls `openEditMo
 
 States handled: editable, locked (≥90 days), saving, success, API error.
 
-Fields: Date (text), Category (dropdown), Amount (number), Description (text).
+- **Editable:** fields enabled, Save + Cancel visible
+- **Locked:** all fields disabled, Save hidden, error banner shown
+- **Saving:** fields disabled, Save shows loading indicator, double-submit prevented
+- **Success:** "Expense updated successfully" displayed, modal closes after 2-second timeout (`setTimeout(closeEditModal, 2000)`)
+- **API error:** non-blocking error message shown, form stays open with user input intact
+
+Note: there is no async loading state for opening the modal — the expense data is already in frontend state and pre-populates the form synchronously.
+
+Fields: Date (text input), Category (dropdown — allowed values from `ALLOWED_CATEGORIES`), Amount (number input), Description (text input, optional).
 
 ---
 

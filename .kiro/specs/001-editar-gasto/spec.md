@@ -4,7 +4,7 @@
 **Status:** Draft
 **Source:** US-001 — Editar Gasto Existente
 **Created:** 2026-05-12
-**Last Updated:** 2026-05-12 (clarified: RD-01 category whitelist, RD-02 modal dialog)
+**Last Updated:** 2026-05-12 (clarified: RD-01 category whitelist, RD-02 modal dialog; resolved: A1 envelope key, A2 category example, A3 error messages, A4 loading state, A6 accessibility tasks, A11/A12 EARS + GIVEN-WHEN-THEN)
 
 ---
 
@@ -58,7 +58,7 @@ When the Finance Manager enters an amount that is negative, zero, or non-numeric
 
 ### FR-04 — Validate category against allowed list (maps to AC-03)
 
-When the Finance Manager attempts to save with the category field empty or set to a value not in the allowed category list, the system shall display a visual error indicator on the category field with the message "Category is required" (if empty) or "Invalid category" (if not in the allowed list) and prevent saving.
+When the Finance Manager attempts to save with the category field empty or set to a value not in the allowed category list, the system shall display a visual error indicator on the category field with the message "Field category is required" (if empty) or "Invalid category" (if not in the allowed list) and prevent saving.
 
 The allowed category list is: **Travel, Meals, Accommodation, Office Supplies, Software, Training**. This list is validated on both frontend (dropdown selector) and backend (whitelist check). New categories may only be added by amending this spec.
 
@@ -120,11 +120,11 @@ The system shall reject any date value that does not conform to the YYYY-MM-DD f
   "count": 1,
   "total": 30.0,
   "currency": "USD",
-  "expenses": [
+  "data": [
     {
       "id": 1,
       "date": "2026-05-01",
-      "category": "Transport",
+      "category": "Travel",
       "description": "Lunch",
       "amount": 30.0,
       "currency": "USD"
@@ -133,7 +133,7 @@ The system shall reject any date value that does not conform to the YYYY-MM-DD f
 }
 ```
 
-The `expenses` array contains the single updated record. `count` and `total` reflect only that record (consistent with the envelope pattern in `architecture.md` § 2.2).
+The `data` array contains the single updated record. `count` and `total` reflect only that record (consistent with the envelope pattern in `architecture.md` § 2.2).
 
 **Error responses:**
 
@@ -194,7 +194,7 @@ Each expense row in the expense list shall include an "Edit" button or affordanc
 
 - A success message "Expense updated successfully" is displayed.
 - The expense list reflects the updated values and recalculated totals.
-- The edit form closes or resets after a brief confirmation period.
+- The edit form closes after a 2-second confirmation period.
 
 **API error state:**
 
@@ -206,7 +206,7 @@ Each expense row in the expense list shall include an "Edit" button or affordanc
 | Field       | Required | Input type                                                                   | Validation rule                           | Error message                                            |
 | ----------- | -------- | ---------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
 | Date        | Yes      | Text input                                                                   | YYYY-MM-DD format, not empty              | "Date is required" / "Date must be in YYYY-MM-DD format" |
-| Category    | Yes      | Dropdown (Travel, Meals, Accommodation, Office Supplies, Software, Training) | Must select a value from the allowed list | "Category is required"                                   |
+| Category    | Yes      | Dropdown (Travel, Meals, Accommodation, Office Supplies, Software, Training) | Must select a value from the allowed list | "Field category is required" / "Invalid category"        |
 | Amount      | Yes      | Numeric input                                                                | Positive number > 0                       | "Amount must be a positive number"                       |
 | Description | No       | Text input                                                                   | No constraint                             | —                                                        |
 
@@ -237,7 +237,7 @@ id, date, category, description, amount, currency
 - **CSV write failure:** If the file write fails (e.g., permissions error), the endpoint returns HTTP 500 with a generic message. The original CSV must not be left in a partially written state — the write should target a complete replacement of the file content.
 - **Concurrent edits:** Two simultaneous edits to the same expense may result in one overwriting the other. This is an accepted limitation documented in `architecture.md` § 8.1.
 - **Invalid ID type:** If `:id` in the URL is not a positive integer, the endpoint returns HTTP 400 with `{ "error": "Invalid expense ID" }`.
-- **Loading state:** While the edit form is being populated (fetching the expense), the UI must show a loading indicator and not display a blank form.
+- **Loading state:** The modal opens immediately pre-populated with data already available in the frontend state — no additional fetch is required. There is no async loading state for the edit form itself.
 - **Empty expense list:** Not directly affected by this feature, but the list view must continue to handle the empty state correctly after an edit.
 
 ---
@@ -286,13 +286,99 @@ id, date, category, description, amount, currency
 
 ---
 
+## Acceptance Criteria
+
+### AC-01 — Edit valid expense
+
+**EARS:** When the Finance Manager submits the edit form with valid data for an expense less than 90 days old, the system shall persist the updated values and display the message "Expense updated successfully".
+
+```gherkin
+GIVEN an expense exists with id=1, date within the last 90 days
+  AND the Finance Manager opens the edit modal for that expense
+  AND the form is pre-populated with the current values
+WHEN the Finance Manager changes the amount to 45.00 and clicks Save
+THEN the system shall send PUT /api/expenses/1 with the updated data
+  AND the system shall display "Expense updated successfully"
+  AND the expense list shall reflect the new amount
+  AND the total shall be recalculated
+```
+
+---
+
+### AC-02 — Validate positive amount
+
+**EARS:** When the Finance Manager enters an amount that is zero, negative, or non-numeric, the system shall display "Amount must be a positive number" on the amount field and shall disable the Save button until the value is corrected.
+
+```gherkin
+GIVEN the edit modal is open for a valid expense
+WHEN the Finance Manager clears the amount field and enters "-5"
+THEN the system shall display "Amount must be a positive number" below the amount field
+  AND the Save button shall be disabled
+WHEN the Finance Manager corrects the amount to "45.00"
+THEN the error message shall disappear
+  AND the Save button shall be re-enabled
+```
+
+---
+
+### AC-03 — Validate required fields
+
+**EARS:** When the Finance Manager attempts to save with the category field empty, the system shall display "Field category is required" and shall prevent saving. Where the category value is not in the allowed list, the system shall display "Invalid category" and shall prevent saving.
+
+```gherkin
+GIVEN the edit modal is open for a valid expense
+WHEN the Finance Manager clears the date field and clicks Save
+THEN the system shall display "Date is required" below the date field
+  AND the save request shall not be sent
+
+GIVEN the edit modal is open for a valid expense
+WHEN the Finance Manager submits with a category not in the allowed list via the API directly
+THEN the backend shall return HTTP 400 with { "error": "Invalid category" }
+```
+
+---
+
+### AC-04 — Block edits older than 90 days
+
+**EARS:** When the Finance Manager opens the edit modal for an expense whose date is more than 90 days before today, the system shall display "Cannot edit expenses older than 90 days", shall disable all input fields, and shall hide the Save button.
+
+```gherkin
+GIVEN an expense exists with a date 91 days ago
+WHEN the Finance Manager clicks the Edit button for that expense
+THEN the modal shall open with all fields disabled
+  AND the Save button shall not be visible
+  AND the message "Cannot edit expenses older than 90 days" shall be displayed
+  AND the Cancel/Close button shall be visible and functional
+
+GIVEN an expense exists with a date exactly 90 days ago
+WHEN the Finance Manager clicks the Edit button for that expense
+THEN the modal shall open in editable state (not locked)
+```
+
+---
+
+### AC-05 — Recalculate totals after edit
+
+**EARS:** When an expense is successfully saved, the system shall recalculate and display the updated total amount and expense count in the expense list view.
+
+```gherkin
+GIVEN the expense list shows a total of $500.00 across 10 expenses
+  AND one expense has amount $50.00
+WHEN the Finance Manager edits that expense and changes the amount to $100.00
+  AND clicks Save successfully
+THEN the expense list total shall update to $550.00
+  AND the expense count shall remain 10
+```
+
+---
+
 ## Traceability
 
 | Acceptance Criterion             | Functional Requirement | Scenario   |
 | -------------------------------- | ---------------------- | ---------- |
 | AC-01 — Edit valid expense       | FR-01, FR-02, FR-08    | Scenario 1 |
 | AC-02 — Validate positive amount | FR-03, FR-07           | Scenario 2 |
-| AC-03 — Validate required fields | FR-04, FR-07           | Scenario 3 |
+| AC-03 — Validate required fields | FR-04, FR-07, FR-09    | Scenario 3 |
 | AC-04 — Block edits > 90 days    | FR-05, FR-07           | Scenario 4 |
 | AC-05 — Recalculate totals       | FR-06                  | Scenario 5 |
 

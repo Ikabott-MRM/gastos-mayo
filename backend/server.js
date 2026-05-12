@@ -48,7 +48,8 @@ function readExpenses() {
   });
 }
 
-// Helper: write the full expenses array back to CSV
+// Helper: write the full expenses array back to CSV atomically
+// Writes to a temp file first, then renames — prevents partial writes on failure
 async function writeExpenses(records) {
   const header = "id,date,category,description,amount,currency";
   const rows = records.map(
@@ -56,7 +57,9 @@ async function writeExpenses(records) {
       `${r.id},${r.date},${r.category},${r.description},${parseFloat(r.amount.toFixed(2))},${r.currency}`,
   );
   const csv = [header, ...rows].join("\n") + "\n";
-  await fs.promises.writeFile(CSV_PATH, csv, "utf8");
+  const tmpPath = CSV_PATH + ".tmp";
+  await fs.promises.writeFile(tmpPath, csv, "utf8");
+  await fs.promises.rename(tmpPath, CSV_PATH);
 }
 
 // GET /api/expenses — return all expenses with optional filters
@@ -85,7 +88,7 @@ app.get("/api/expenses", async (req, res) => {
       count: expenses.length,
       total: parseFloat(total.toFixed(2)),
       currency: "USD",
-      expenses,
+      data: expenses,
     });
   } catch (err) {
     console.error("Error reading CSV:", err.message);
@@ -201,7 +204,7 @@ app.put("/api/expenses/:id", async (req, res) => {
       count: 1,
       total: updatedExpense.amount,
       currency: updatedExpense.currency,
-      expenses: [updatedExpense],
+      data: [updatedExpense],
     });
   } catch (err) {
     console.error("Error updating expense:", err.message);
