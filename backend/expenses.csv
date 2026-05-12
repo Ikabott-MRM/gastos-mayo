@@ -1,0 +1,11 @@
+id,date,category,description,amount,currency
+1,2026-04-01,Travel,Flight to Madrid,320.50,USD
+2,2026-04-03,Meals,Team lunch,85.00,USD
+3,2026-04-05,Accommodation,Hotel - 2 nights,210.00,USD
+4,2026-04-07,Office Supplies,Notebooks and pens,34.75,USD
+5,2026-04-10,Travel,Taxi to airport,45.00,USD
+6,2026-04-12,Software,Figma subscription,15.00,USD
+7,2026-04-15,Meals,Client dinner,130.00,USD
+8,2026-04-18,Training,Online course,99.00,USD
+9,2026-04-20,Office Supplies,Printer ink,22.50,USD
+10,2026-04-25,Travel,Train tickets,60.00,USD
