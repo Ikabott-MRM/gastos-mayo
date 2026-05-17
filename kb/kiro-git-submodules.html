@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kiro + Git Submodules para Organizaciones</title>
+    <style>
+      :root {
+        --kiro-blue: #0066cc;
+        --kiro-dark: #0a0e1a;
+        --kiro-card: #111827;
+        --kiro-border: #1e2d45;
+        --kiro-accent: #00aaff;
+        --kiro-green: #00cc88;
+        --kiro-yellow: #ffcc00;
+        --kiro-red: #ff4466;
+        --kiro-purple: #9966ff;
+        --text-primary: #e8edf5;
+        --text-secondary: #8899aa;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--kiro-dark);
+        color: var(--text-primary);
+        line-height: 1.6;
+        padding: 2rem;
+      }
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--kiro-accent);
+        margin-bottom: 0.25rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+      }
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--kiro-accent);
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 2.5rem;
+      }
+      .source-badge {
+        display: inline-block;
+        background: #0d1f33;
+        border: 1px solid var(--kiro-border);
+        border-radius: 4px;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        color: var(--kiro-accent);
+        margin-bottom: 2.5rem;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .card {
+        background: var(--kiro-card);
+        border: 1px solid var(--kiro-border);
+        border-radius: 10px;
+        padding: 1.5rem;
+      }
+      .card.accent-blue {
+        border-left: 3px solid var(--kiro-accent);
+      }
+      .card.accent-green {
+        border-left: 3px solid var(--kiro-green);
+      }
+      .card.accent-yellow {
+        border-left: 3px solid var(--kiro-yellow);
+      }
+      .card.accent-purple {
+        border-left: 3px solid var(--kiro-purple);
+      }
+      .card.accent-red {
+        border-left: 3px solid var(--kiro-red);
+      }
+      .section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--kiro-border);
+      }
+      .tag {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-right: 0.4rem;
+        margin-bottom: 0.4rem;
+      }
+      .tag-blue {
+        background: #0d2a4a;
+        color: var(--kiro-accent);
+      }
+      .tag-green {
+        background: #0d3326;
+        color: var(--kiro-green);
+      }
+      .tag-yellow {
+        background: #332b00;
+        color: var(--kiro-yellow);
+      }
+      .tag-red {
+        background: #330d1a;
+        color: var(--kiro-red);
+      }
+      .tag-purple {
+        background: #1e1040;
+        color: var(--kiro-purple);
+      }
+      .step {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        align-items: flex-start;
+      }
+      .step-num {
+        min-width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--kiro-blue);
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .step-content {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+      }
+      .step-content strong {
+        color: var(--text-primary);
+      }
+      code {
+        font-family: "Cascadia Code", "Fira Code", monospace;
+        background: #0d1520;
+        border: 1px solid var(--kiro-border);
+        border-radius: 4px;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.82rem;
+        color: #7dd3fc;
+      }
+      .code-block {
+        background: #070d16;
+        border: 1px solid var(--kiro-border);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        font-family: "Cascadia Code", "Fira Code", monospace;
+        font-size: 0.82rem;
+        color: #7dd3fc;
+        margin: 0.75rem 0;
+        overflow-x: auto;
+        line-height: 1.8;
+      }
+      .code-block .comment {
+        color: #4a6a8a;
+      }
+      .code-block .folder {
+        color: #fbbf24;
+      }
+      .code-block .file {
+        color: #86efac;
+      }
+      .code-block .kiro {
+        color: #c084fc;
+      }
+      .diagram-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .repo-box {
+        background: #0d1f33;
+        border: 1px solid var(--kiro-border);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        font-size: 0.82rem;
+        text-align: center;
+        min-width: 120px;
+      }
+      .repo-box .repo-icon {
+        font-size: 1.2rem;
+        display: block;
+        margin-bottom: 0.2rem;
+      }
+      .repo-box.central {
+        border-color: var(--kiro-accent);
+        background: #0a1e33;
+      }
+      .repo-box.project {
+        border-color: var(--kiro-green);
+        background: #0a2018;
+      }
+      .repo-box.shared {
+        border-color: var(--kiro-purple);
+        background: #150d2a;
+      }
+      .arrow {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+      }
+      .arrow-down {
+        display: block;
+        text-align: center;
+        color: var(--text-secondary);
+        margin: 0.3rem 0;
+      }
+      .check {
+        color: var(--kiro-green);
+        margin-right: 0.4rem;
+      }
+      .warn {
+        color: var(--kiro-yellow);
+        margin-right: 0.4rem;
+      }
+      .cross {
+        color: var(--kiro-red);
+        margin-right: 0.4rem;
+      }
+      ul.feature-list {
+        list-style: none;
+        padding: 0;
+      }
+      ul.feature-list li {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        padding: 0.35rem 0;
+        border-bottom: 1px solid #0d1a2a;
+      }
+      ul.feature-list li:last-child {
+        border-bottom: none;
+      }
+      ul.feature-list li strong {
+        color: var(--text-primary);
+      }
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.83rem;
+        margin-top: 0.5rem;
+      }
+      .comparison-table th {
+        background: #0d1a2a;
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 0.6rem 0.8rem;
+        text-align: left;
+        border-bottom: 1px solid var(--kiro-border);
+      }
+      .comparison-table td {
+        padding: 0.55rem 0.8rem;
+        border-bottom: 1px solid #0d1a2a;
+        color: var(--text-secondary);
+        vertical-align: top;
+      }
+      .comparison-table td:first-child {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      .comparison-table tr:last-child td {
+        border-bottom: none;
+      }
+      .pill {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .pill-green {
+        background: #0d3326;
+        color: var(--kiro-green);
+      }
+      .pill-yellow {
+        background: #332b00;
+        color: var(--kiro-yellow);
+      }
+      .pill-red {
+        background: #330d1a;
+        color: var(--kiro-red);
+      }
+      .footer {
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--kiro-border);
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        text-align: center;
+      }
+      .footer a {
+        color: var(--kiro-accent);
+        text-decoration: none;
+      }
+      @media (max-width: 768px) {
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+        body {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body></body>
+</html>
+
+<!-- HEADER -->
+<h1>🔗 Kiro + Git Submodules para Organizaciones</h1>
+<p class="subtitle">
+  Cómo Kiro recomienda estructurar repositorios compartidos entre equipos usando
+  Git Submodules y Multi-root Workspaces
+</p>
+<span class="source-badge"
+  >📄 Fuente: kiro.dev/docs/specs/best-practices ·
+  kiro.dev/docs/editor/multi-root-workspaces ·
+  kiro.dev/blog/multi-root-workspaces</span
+>
+
+<!-- SECCIÓN 1: ¿POR QUÉ? -->
+<div class="section-title">
+  01 — El problema que resuelven los submodules en Kiro
+</div>
+<div class="grid-2">
+  <div class="card accent-blue">
+    <h3>🏢 Escenario organizacional típico</h3>
+    <p
+      style="
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+      "
+    >
+      Múltiples equipos comparten specs, steering files y componentes. Sin una
+      estrategia, cada proyecto duplica o diverge.
+    </p>
+    <div class="diagram-row">
+      <div class="repo-box project">
+        <span class="repo-icon">📦</span>team-a/app
+      </div>
+      <div class="arrow">→</div>
+      <div class="repo-box shared">
+        <span class="repo-icon">📐</span>shared/specs
+      </div>
+      <div class="arrow">←</div>
+      <div class="repo-box project">
+        <span class="repo-icon">📦</span>team-b/app
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+    <div class="repo-box central" style="margin: 0 auto; max-width: 200px">
+      <span class="repo-icon">🏛️</span>central-specs-repo<br /><small
+        style="color: var(--text-secondary)"
+        >fuente de verdad</small
+      >
+    </div>
+  </div>
+  <div class="card accent-green">
+    <h3>✅ Cuándo usar Git Submodules con Kiro</h3>
+    <ul class="feature-list">
+      <li>
+        <span class="check">✓</span> <strong>Shared libraries:</strong> editando
+        una feature que requiere cambios en una librería compartida
+      </li>
+      <li>
+        <span class="check">✓</span>
+        <strong>Microservicios:</strong> manteniendo frontend + backend + auth
+        relacionados
+      </li>
+      <li>
+        <span class="check">✓</span>
+        <strong>Specs compartidas:</strong> múltiples proyectos referencian las
+        mismas especificaciones
+      </li>
+      <li>
+        <span class="check">✓</span>
+        <strong>Refactor cross-repo:</strong> navegar y refactorizar a través de
+        varios proyectos a la vez
+      </li>
+      <li>
+        <span class="check">✓</span>
+        <strong>npm/yarn/pnpm workspaces:</strong> monorepos con múltiples
+        paquetes
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- SECCIÓN 2: RECOMENDACIÓN OFICIAL KIRO -->
+<div class="section-title">
+  02 — Recomendación oficial de Kiro para specs compartidas
+</div>
+<div class="card accent-purple" style="margin-bottom: 1.5rem">
+  <h3>📋 3 pasos recomendados por Kiro (kiro.dev/docs/specs/best-practices)</h3>
+  <div class="grid-3" style="margin-top: 1rem; margin-bottom: 0">
+    <div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Repositorio central de specs</strong><br />Crear un repo
+          dedicado para especificaciones compartidas que múltiples proyectos
+          puedan referenciar.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Git Submodules / Package References</strong><br />Vincular las
+          specs centrales a proyectos individuales usando submodules, package
+          references o symbolic links.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Workflows cross-repo</strong><br />Desarrollar procesos para
+          proponer, revisar y actualizar specs compartidas que afectan múltiples
+          proyectos.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 3: ESTRUCTURA DE ARCHIVOS -->
+<div class="section-title">03 — Estructura de archivos recomendada</div>
+<div class="grid-2">
+  <div class="card accent-blue">
+    <h3>📁 Workspace Single-Root (básico)</h3>
+    <div class="code-block">
+      <span class="folder">📁 my-app/</span>
+      ├── <span class="kiro">.kiro/</span>
+      <span class="comment">← specs, steering, hooks</span> │ ├──
+      <span class="kiro">specs/</span> │ │ ├──
+      <span class="file">001-auth/</span> │ │ └──
+      <span class="file">002-dashboard/</span> │ ├──
+      <span class="kiro">steering/</span> │ └──
+      <span class="kiro">hooks/</span> ├── <span class="folder">src/</span> └──
+      <span class="folder">tests/</span>
+    </div>
+    <p style="font-size: 0.82rem; color: var(--text-secondary)">
+      Configuración estándar. Todo el contexto de Kiro vive bajo
+      <code>.kiro/</code> en la raíz del proyecto.
+    </p>
+  </div>
+  <div class="card accent-green">
+    <h3>📁 Multi-root Workspace (organizacional)</h3>
+    <div class="code-block">
+      <span class="folder">📁 my-app/</span>
+      <span class="comment">← Root 1</span> │ └──
+      <span class="kiro">.kiro/</span> <span class="folder">📁 shared-ui/</span>
+      <span class="comment">← Root 2 (submodule)</span> │ ├──
+      <span class="kiro">.kiro/</span> │ └──
+      <span class="folder">components/</span>
+      <span class="folder">📁 auth-service/</span>
+      <span class="comment">← Root 3 (submodule)</span> │ ├──
+      <span class="kiro">.kiro/</span> │ └── <span class="folder">api/</span>
+      <span class="folder">📁 central-specs/</span>
+      <span class="comment">← Root 4 (repo central)</span> └──
+      <span class="kiro">.kiro/specs/</span>
+    </div>
+    <p style="font-size: 0.82rem; color: var(--text-secondary)">
+      Cada root mantiene su identidad. Kiro unifica specs, steering y hooks en
+      una sola vista.
+    </p>
+  </div>
+</div>
+
+<!-- SECCIÓN 4: CÓMO KIRO MANEJA MULTI-ROOT -->
+<div class="section-title">
+  04 — Cómo Kiro gestiona cada artefacto en Multi-root
+</div>
+<div class="grid-3">
+  <div class="card accent-blue">
+    <h3>📋 Specs</h3>
+    <ul class="feature-list">
+      <li><span class="check">✓</span> Lista unificada de todos los roots</li>
+      <li>
+        <span class="check">✓</span> Muestra el root de origen junto a cada spec
+      </li>
+      <li>
+        <span class="check">✓</span> Kiro determina el root correcto al crear
+        una spec nueva
+      </li>
+      <li>
+        <span class="check">✓</span> <code>#spec:nombre</code> funciona
+        cross-root
+      </li>
+    </ul>
+  </div>
+  <div class="card accent-yellow">
+    <h3>🎯 Steering Files</h3>
+    <ul class="feature-list">
+      <li>
+        <span class="check">✓</span> <strong>Always Included:</strong> se cargan
+        sin importar el root activo
+      </li>
+      <li>
+        <span class="warn">⚡</span> <strong>Conditional:</strong> solo si el
+        agente trabaja en ese root
+      </li>
+      <li>
+        <span class="check">✓</span> Global steering aplica a todos los
+        workspaces
+      </li>
+      <li>
+        <span class="check">✓</span> Workspace steering aplica solo a ese root
+      </li>
+    </ul>
+  </div>
+  <div class="card accent-purple">
+    <h3>🪝 Hooks</h3>
+    <ul class="feature-list">
+      <li>
+        <span class="check">✓</span> Lista unificada, cada hook muestra su root
+      </li>
+      <li>
+        <span class="warn">⚡</span> File hooks solo se disparan para archivos
+        del mismo root
+      </li>
+      <li>
+        <span class="check">✓</span> Aislamiento limpio: cambios en
+        <code>shared-ui</code> no disparan hooks de <code>my-app</code>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="grid-2">
+  <div class="card accent-green">
+    <h3>🔌 MCP Servers</h3>
+    <ul class="feature-list">
+      <li>
+        <span class="check">✓</span> Todos los MCP de todos los roots se
+        inicializan al arrancar
+      </li>
+      <li>
+        <span class="warn">⚡</span> Si dos roots definen un MCP con el mismo
+        nombre, gana el último root
+      </li>
+      <li>
+        <span class="check">✓</span> <strong>Buena práctica:</strong> usar
+        prefijos — <code>frontend-github</code> vs <code>backend-github</code>
+      </li>
+    </ul>
+  </div>
+  <div class="card accent-red">
+    <h3>🔍 Búsqueda y Contexto</h3>
+    <ul class="feature-list">
+      <li>
+        <span class="check">✓</span> <code>#codebase</code> busca en todos los
+        roots simultáneamente
+      </li>
+      <li>
+        <span class="check">✓</span> Indexación automática de código, docs y
+        configs de cada root
+      </li>
+      <li>
+        <span class="warn">⚡</span> Si hay archivos duplicados (ej:
+        <code>utils/logger.ts</code> en 2 roots), Kiro muestra lista con paths
+        completos
+      </li>
+      <li>
+        <span class="check">✓</span> Soporte de rangos:
+        <code>#file:src/index.ts:10-25</code>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- SECCIÓN 5: SETUP -->
+<div class="section-title">05 — Cómo configurar un Multi-root Workspace con Submodules</div>
+<div class="card accent-blue" style="margin-bottom:1.5rem;">
+  <h3>⚙️ Pasos de configuración</h3>
+  <div class="grid-2" style="margin-top:1rem;margin-bottom:0;">
+    <div>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.75rem;"><strong style="color:var(--text-primary);">Opción A — Desde la UI de Kiro</strong></p>
+      <div class="step"><div class="step-num">1</div><div class="step-content">Abrir el proyecto principal en Kiro</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><strong>File → Add Folder to Workspace...</strong> y seleccionar el submodule o repo compartido</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">Kiro reconoce cada carpeta como root y carga los <code>.kiro/</code> de cada uno</div></div>
+    </div>
+    <div>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.75rem;"><strong style="color:var(--text-primary);">Opción B — Drag & Drop</strong></p>
+      <div class="step"><div class="step-num">1</div><div class="step-content">Arrastrar otra carpeta de proyecto desde el explorador de archivos</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">Soltarla en el panel Explorer de Kiro</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">Kiro carga automáticamente specs, steering y hooks del nuevo root</div></div>
+    </div>
+  </div>
+  <div style="margin-top:1rem;">
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.5rem;"><strong style="color:var(--text-primary);">Agregar el submodule en Git (terminal)</strong></p>
+    <div class="code-block">
+<span class="comment"># Agregar repo de specs compartidas como submodule</span>
+git submodule add https://github.com/org/central-specs.git shared/specs
+
+<span class="comment"># Clonar un repo que ya tiene submodules</span>
+git clone --recurse-submodules https://github.com/org/my-app.git
+
+<span class="comment"># Actualizar submodules existentes</span>
+git submodule update --remote --merge
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 6: EJEMPLO REAL -->
+<div class="section-title">06 — Ejemplo real: workflow cross-project con Kiro</div>
+<div class="card accent-green" style="margin-bottom:1.5rem;">
+  <h3>🎬 Caso de uso: actualizar un componente compartido y su consumidor</h3>
+  <div class="grid-2" style="margin-top:1rem;margin-bottom:0;">
+    <div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;">Escenario: actualizar el componente <code>Button</code> en <code>shared-ui</code> y luego actualizar <code>my-app</code> para usar la nueva prop <code>variant</code>.</p>
+      <div class="step"><div class="step-num">1</div><div class="step-content">Abrir <code>my-app</code> y <code>shared-ui</code> en un mismo workspace multi-root</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">Pedirle a Kiro:<br><code>#spec:ui-update Add 'outline' variant to Button, then update my-app to use it</code></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">Kiro trabaja en ambos roots en una sola conversación: actualiza código, dispara hooks y trabaja con specs</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content">Sin cambiar de ventana ni crear conversaciones separadas</div></div>
+    </div>
+    <div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;"><strong style="color:var(--text-primary);">Estructura del workspace en este escenario:</strong></p>
+      <div class="code-block">
+<span class="folder">📁 my-app/</span>           <span class="comment">← Root 1</span>
+│   ├── <span class="kiro">.kiro/specs/</span>
+│   │   └── <span class="file">ui-update/</span>
+│   └── <span class="folder">src/components/</span>
+<span class="folder">📁 shared-ui/</span>        <span class="comment">← Root 2 (submodule)</span>
+│   ├── <span class="kiro">.kiro/</span>
+│   └── <span class="folder">components/</span>
+│       └── <span class="file">Button.tsx</span>
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:0.5rem;">Kiro indexa ambos roots y puede referenciar archivos de cualquiera de los dos en la misma sesión.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 7: COMPARATIVA -->
+<div class="section-title">07 — Comparativa de estrategias de repositorio</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Estrategia</th>
+        <th>Cuándo usar</th>
+        <th>Ventajas con Kiro</th>
+        <th>Consideraciones</th>
+        <th>Soporte Kiro</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Single Repo</td>
+        <td>Proyecto pequeño, un equipo</td>
+        <td>Setup mínimo, todo en un <code>.kiro/</code></td>
+        <td>No escala bien entre equipos</td>
+        <td><span class="pill pill-green">Nativo</span></td>
+      </tr>
+      <tr>
+        <td>Git Submodules</td>
+        <td>Specs/libs compartidas entre proyectos</td>
+        <td>Multi-root workspace unifica contexto; cada root mantiene su <code>.kiro/</code></td>
+        <td>Requiere disciplina en actualizaciones de submodules</td>
+        <td><span class="pill pill-green">Recomendado</span></td>
+      </tr>
+      <tr>
+        <td>Package References</td>
+        <td>Librerías versionadas (npm/yarn workspaces)</td>
+        <td>Compatible con multi-root; ideal para componentes con versioning semántico</td>
+        <td>Overhead de publicación de paquetes</td>
+        <td><span class="pill pill-green">Soportado</span></td>
+      </tr>
+      <tr>
+        <td>Symbolic Links</td>
+        <td>Desarrollo local, sin CI/CD complejo</td>
+        <td>Funciona con multi-root si los paths son correctos</td>
+        <td>Frágil en CI/CD y Windows</td>
+        <td><span class="pill pill-yellow">Condicional</span></td>
+      </tr>
+      <tr>
+        <td>Monorepo puro</td>
+        <td>Organización con control total del toolchain</td>
+        <td>Multi-root puede apuntar a subdirectorios del monorepo</td>
+        <td>Requiere herramientas adicionales (Nx, Turborepo)</td>
+        <td><span class="pill pill-yellow">Parcial</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECCIÓN 8: BUENAS PRÁCTICAS -->
+<div class="section-title">08 — Buenas prácticas para organizaciones</div>
+<div class="grid-3">
+  <div class="card accent-blue">
+    <h3>📐 Specs</h3>
+    <ul class="feature-list">
+      <li><span class="check">✓</span> Un repo central para specs compartidas entre equipos</li>
+      <li><span class="check">✓</span> Specs por feature, no una sola spec para todo el proyecto</li>
+      <li><span class="check">✓</span> Versionar specs junto al código que describen</li>
+      <li><span class="warn">⚡</span> Proceso definido para proponer cambios a specs compartidas (PR + review)</li>
+    </ul>
+  </div>
+  <div class="card accent-yellow">
+    <h3>🎯 Steering Files</h3>
+    <ul class="feature-list">
+      <li><span class="check">✓</span> Global steering para estándares de toda la organización</li>
+      <li><span class="check">✓</span> Workspace steering para convenciones específicas del proyecto</li>
+      <li><span class="warn">⚡</span> Workspace-level tiene precedencia sobre global cuando hay conflictos</li>
+      <li><span class="check">✓</span> Usar <code>inclusion: fileMatch</code> para steering condicional por tipo de archivo</li>
+    </ul>
+  </div>
+  <div class="card accent-purple">
+    <h3>🔌 MCP Servers</h3>
+    <ul class="feature-list">
+      <li><span class="check">✓</span> Usar prefijos en nombres: <code>frontend-github</code>, <code>backend-github</code></li>
+      <li><span class="cross">✗</span> Evitar nombres genéricos que colisionen entre roots</li>
+      <li><span class="check">✓</span> Config a nivel usuario para MCPs globales de la organización</li>
+      <li><span class="warn">⚡</span> El último root en el workspace "gana" si hay nombres duplicados</li>
+    </ul>
+  </div>
+</div>
+
+<!-- SECCIÓN 9: ARQUITECTURA ORG-STANDARDS -->
+<div class="section-title">09 — Arquitectura recomendada: org-standards como hub central</div>
+
+<!-- Diagrama visual de la arquitectura -->
+<div class="card" style="margin-bottom:1.5rem; border-color: var(--kiro-accent);">
+  <h3 style="margin-bottom:1.25rem;">🏗️ Modelo de 3 capas: Área → Organización → Proyecto</h3>
+
+  <!-- CAPA 1: REPOS DE ÁREA -->
+  <div style="margin-bottom:0.5rem;">
+    <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.75rem;">
+      CAPA 1 — Repos de Área (agentes especializados por dominio)
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+      <div class="repo-box project" style="flex:1;min-width:130px;">
+        <span class="repo-icon">🤖</span>
+        <strong>area-dev-agents</strong>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">.kiro/steering/<br>dev-practices.md<br>architecture.md</div>
+      </div>
+      <div class="repo-box project" style="flex:1;min-width:130px;">
+        <span class="repo-icon">🤖</span>
+        <strong>area-qa-agents</strong>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">.kiro/steering/<br>qa-standards.md<br>test-templates/</div>
+      </div>
+      <div class="repo-box project" style="flex:1;min-width:130px;">
+        <span class="repo-icon">🤖</span>
+        <strong>area-po-agents</strong>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">.kiro/steering/<br>po-constitution.md<br>user-story-template/</div>
+      </div>
+      <div class="repo-box project" style="flex:1;min-width:130px;">
+        <span class="repo-icon">🤖</span>
+        <strong>area-security-agents</strong>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">.kiro/steering/<br>security.md<br>compliance/</div>
+      </div>
+      <div class="repo-box project" style="flex:1;min-width:130px;">
+        <span class="repo-icon">🤖</span>
+        <strong>area-ba-agents</strong>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">.kiro/steering/<br>ba-guide.md<br>spec-templates/</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLECHAS HACIA CAPA 2 -->
+  <div style="text-align:center;font-size:1.4rem;color:var(--kiro-accent);margin:0.5rem 0;letter-spacing:1.5rem;">↓ ↓ ↓ ↓ ↓</div>
+  <div style="text-align:center;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.75rem;">
+    cada área importada como <code>git submodule</code>
+  </div>
+
+  <!-- CAPA 2: ORG-STANDARDS -->
+  <div style="margin-bottom:0.5rem;">
+    <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.75rem;">
+      CAPA 2 — org-standards (hub central de la compañía)
+    </div>
+    <div class="repo-box central" style="max-width:100%;padding:1.25rem 1.5rem;display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap;">
+      <div style="flex:0 0 auto;">
+        <span style="font-size:2rem;">🏛️</span>
+        <div style="font-size:1rem;font-weight:700;color:var(--kiro-accent);margin-top:0.25rem;">org-standards</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);">repo central de la organización</div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div class="code-block" style="margin:0;font-size:0.78rem;">
+<span class="folder">📁 org-standards/</span>
+├── <span class="kiro">.kiro/</span>
+│   ├── <span class="kiro">steering/</span>
+│   │   └── <span class="file">constitution.md</span>   <span class="comment">← orquestador</span>
+│   └── <span class="kiro">hooks/</span>
+│       └── <span class="file">org-wide-hooks.json</span>
+├── <span class="folder">submodules/</span>
+│   ├── <span class="file">area-dev-agents/</span>     <span class="comment">← submodule</span>
+│   ├── <span class="file">area-qa-agents/</span>      <span class="comment">← submodule</span>
+│   ├── <span class="file">area-po-agents/</span>      <span class="comment">← submodule</span>
+│   ├── <span class="file">area-security-agents/</span><span class="comment">← submodule</span>
+│   └── <span class="file">area-ba-agents/</span>      <span class="comment">← submodule</span>
+└── <span class="file">.gitmodules</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px;">
+        <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.6rem;"><strong style="color:var(--text-primary);">Responsabilidades:</strong></p>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Agrega cada repo de área como submodule</li>
+          <li><span class="check">✓</span> Define el <code>constitution.md</code> que orquesta todo</li>
+          <li><span class="check">✓</span> Publica hooks y steering de nivel org</li>
+          <li><span class="check">✓</span> Controla qué versión (commit) de cada área está activa</li>
+          <li><span class="warn">⚡</span> Solo el equipo de arquitectura hace merge aquí</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLECHAS HACIA CAPA 3 -->
+  <div style="text-align:center;font-size:1.4rem;color:var(--kiro-green);margin:0.5rem 0;letter-spacing:1.5rem;">↓ ↓ ↓</div>
+  <div style="text-align:center;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.75rem;">
+    <code>org-standards</code> importado como <code>git submodule</code> en cada proyecto nuevo
+  </div>
+
+  <!-- CAPA 3: PROYECTOS -->
+  <div>
+    <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.75rem;">
+      CAPA 3 — Proyectos nuevos (consumidores)
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <div class="repo-box shared" style="flex:1;min-width:200px;padding:1rem;">
+        <span class="repo-icon">📦</span>
+        <strong>proyecto-alpha</strong>
+        <div class="code-block" style="margin-top:0.6rem;font-size:0.75rem;text-align:left;">
+<span class="folder">📁 proyecto-alpha/</span>
+├── <span class="kiro">.kiro/</span>
+│   └── <span class="kiro">steering/</span>
+│       └── <span class="file">local-overrides.md</span>
+├── <span class="folder">org-standards/</span>  <span class="comment">← submodule</span>
+└── <span class="file">src/</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Hereda todo de org-standards.<br>Solo agrega overrides locales.</div>
+      </div>
+      <div class="repo-box shared" style="flex:1;min-width:200px;padding:1rem;">
+        <span class="repo-icon">📦</span>
+        <strong>proyecto-beta</strong>
+        <div class="code-block" style="margin-top:0.6rem;font-size:0.75rem;text-align:left;">
+<span class="folder">📁 proyecto-beta/</span>
+├── <span class="kiro">.kiro/</span>
+│   └── <span class="kiro">steering/</span>
+│       └── <span class="file">workflow-guide.md</span>
+├── <span class="folder">org-standards/</span>  <span class="comment">← submodule</span>
+└── <span class="file">src/</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Mismo submodule, versión pinneada.<br>Actualiza cuando el equipo decide.</div>
+      </div>
+      <div class="repo-box shared" style="flex:1;min-width:200px;padding:1rem;">
+        <span class="repo-icon">📦</span>
+        <strong>proyecto-gamma</strong>
+        <div class="code-block" style="margin-top:0.6rem;font-size:0.75rem;text-align:left;">
+<span class="folder">📁 proyecto-gamma/</span>
+├── <span class="kiro">.kiro/</span>
+│   └── <span class="kiro">steering/</span>
+│       └── <span class="file">domain-rules.md</span>
+├── <span class="folder">org-standards/</span>  <span class="comment">← submodule</span>
+└── <span class="file">src/</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Puede extender con steering<br>específico del dominio.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cómo Kiro carga el contexto en este modelo -->
+<div class="grid-2" style="margin-bottom:1.5rem;">
+  <div class="card accent-yellow">
+    <h3>📂 Cómo Kiro carga el contexto en un proyecto</h3>
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.75rem;">Al abrir <code>proyecto-alpha</code> como multi-root workspace con <code>org-standards</code>:</p>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      <div style="background:#0d1a2a;border-radius:6px;padding:0.6rem 0.8rem;font-size:0.82rem;">
+        <span style="color:var(--kiro-accent);font-weight:600;">1° Global steering</span>
+        <span style="color:var(--text-secondary);"> — <code>~/.kiro/steering/</code> del usuario</span>
+      </div>
+      <div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;">↓ se combina con</div>
+      <div style="background:#0d1a2a;border-radius:6px;padding:0.6rem 0.8rem;font-size:0.82rem;">
+        <span style="color:var(--kiro-purple);font-weight:600;">2° Org steering</span>
+        <span style="color:var(--text-secondary);"> — <code>org-standards/.kiro/steering/</code></span>
+      </div>
+      <div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;">↓ se combina con</div>
+      <div style="background:#0d1a2a;border-radius:6px;padding:0.6rem 0.8rem;font-size:0.82rem;">
+        <span style="color:var(--kiro-green);font-weight:600;">3° Área steering</span>
+        <span style="color:var(--text-secondary);"> — <code>org-standards/submodules/area-*/</code></span>
+      </div>
+      <div style="text-align:center;color:var(--text-secondary);font-size:0.8rem;">↓ se combina con</div>
+      <div style="background:#0d1a2a;border-radius:6px;padding:0.6rem 0.8rem;font-size:0.82rem;">
+        <span style="color:var(--kiro-yellow);font-weight:600;">4° Proyecto steering</span>
+        <span style="color:var(--text-secondary);"> — <code>proyecto-alpha/.kiro/steering/</code> <em>(mayor precedencia)</em></span>
+      </div>
+    </div>
+  </div>
+  <div class="card accent-green">
+    <h3>⚙️ Comandos Git para este modelo</h3>
+    <div class="code-block" style="font-size:0.78rem;">
+<span class="comment"># 1. En org-standards: agregar cada área</span>
+git submodule add https://github.com/org/area-dev-agents.git \
+  submodules/area-dev-agents
+git submodule add https://github.com/org/area-qa-agents.git \
+  submodules/area-qa-agents
+<span class="comment"># ... repetir por cada área</span>
+
+<span class="comment"># 2. En un proyecto nuevo: importar org-standards</span>
+git submodule add https://github.com/org/org-standards.git \
+  org-standards
+
+<span class="comment"># 3. Clonar proyecto con toda la cadena</span>
+git clone --recurse-submodules \
+  https://github.com/org/proyecto-alpha.git
+
+<span class="comment"># 4. Actualizar org-standards en el proyecto</span>
+cd org-standards
+git pull origin main
+cd ..
+git add org-standards
+git commit -m "chore: update org-standards to latest"
+    </div>
+  </div>
+</div>
+
+<!-- Reglas de precedencia -->
+<div class="card accent-purple" style="margin-bottom:1.5rem;">
+  <h3>⚖️ Reglas de precedencia y responsabilidades por capa</h3>
+  <table class="comparison-table" style="margin-top:0.75rem;">
+    <thead>
+      <tr>
+        <th>Capa</th>
+        <th>Repo</th>
+        <th>Qué define</th>
+        <th>Quién puede modificar</th>
+        <th>Precedencia en Kiro</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🌐 Global</td>
+        <td><code>~/.kiro/steering/</code></td>
+        <td>Preferencias personales del desarrollador</td>
+        <td>Cada desarrollador</td>
+        <td><span class="pill pill-yellow">Baja</span></td>
+      </tr>
+      <tr>
+        <td>🤖 Área</td>
+        <td><code>area-*-agents</code></td>
+        <td>Estándares del capítulo (dev, qa, po, security, ba)</td>
+        <td>Chapter Lead del área</td>
+        <td><span class="pill pill-yellow">Media-baja</span></td>
+      </tr>
+      <tr>
+        <td>🏛️ Organización</td>
+        <td><code>org-standards</code></td>
+        <td>Constitution, arquitectura, seguridad, workflow</td>
+        <td>Arquitectura / Tech Lead</td>
+        <td><span class="pill pill-yellow">Media</span></td>
+      </tr>
+      <tr>
+        <td>📦 Proyecto</td>
+        <td><code>proyecto-*/</code></td>
+        <td>Overrides locales, reglas específicas del dominio</td>
+        <td>Equipo del proyecto</td>
+        <td><span class="pill pill-green">Alta (gana)</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.75rem;">
+    <span class="warn">⚡</span> En Kiro, el steering del workspace (proyecto) tiene mayor precedencia que el global cuando hay conflictos. Los proyectos pueden extender o sobreescribir reglas de org-standards sin modificar el repo central.
+  </p>
+</div>
+
+<!-- TAGS -->
+<div style="margin-top:1.5rem;">
+  <span class="tag tag-blue">Git Submodules</span>
+  <span class="tag tag-green">Multi-root Workspace</span>
+  <span class="tag tag-purple">Shared Specs</span>
+  <span class="tag tag-yellow">Steering Files</span>
+  <span class="tag tag-blue">Cross-repo Workflows</span>
+  <span class="tag tag-green">Kiro Best Practices</span>
+  <span class="tag tag-purple">Organizaciones</span>
+  <span class="tag tag-yellow">MCP Servers</span>
+  <span class="tag tag-red">org-standards</span>
+  <span class="tag tag-blue">3 Capas</span>
+  <span class="tag tag-green">Chapter Leads</span>
+</div>
+
+<div class="footer">
+  Basado en documentación oficial de Kiro — 
+  <a href="https://kiro.dev/docs/specs/best-practices/" target="_blank">Best Practices</a> · 
+  <a href="https://kiro.dev/docs/editor/multi-root-workspaces/" target="_blank">Multi-root Workspaces</a> · 
+  <a href="https://kiro.dev/blog/multi-root-workspaces/" target="_blank">Blog: Multi-root Workspaces</a>
+  <br>Contenido parafraseado para cumplimiento de licencias. Generado: Mayo 2026.
+</div>
+
+</body>
+</html>
