@@ -5,7 +5,7 @@
 **Story Points:** [Pendiente estimación]  
 **Sprint:** [Pendiente asignación]  
 **Created:** 2026-05-12  
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-05-12 (H2: corrected invalid categories in Scenario 1 — "Food"→"Meals", "Transport"→"Travel")
 
 ---
 
@@ -64,8 +64,8 @@ the system shall recalculate and display the updated total amount and expense co
 
 ```gherkin
 GIVEN the expense list contains an expense dated 2026-05-01 (11 days old)
-  AND the expense has category "Food", amount 25.50, description "Lunch"
-WHEN the Finance Manager changes the category to "Transport" and amount to 30.00
+  AND the expense has category "Meals", amount 25.50, description "Lunch"
+WHEN the Finance Manager changes the category to "Travel" and amount to 30.00
   AND clicks "Save"
 THEN the system shall save the updated expense
   AND display "Expense updated successfully"
@@ -89,7 +89,7 @@ GIVEN the Finance Manager is editing an expense
 WHEN the Finance Manager clears the category field
   AND attempts to save
 THEN the system shall display a red border around the category field
-  AND show error message "Category is required"
+  AND show error message "Field category is required"
   AND prevent saving
 ```
 
